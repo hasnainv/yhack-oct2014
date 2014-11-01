@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  div #{title}
+  p.idea-column
+  - for (var i = 0; i < tags.length; i++)
+      p
+        div#idea-column
+            div#idea-column Idea #{i+1} 
+            div Tags: #{tags[i]}
+            div Content: #{content[i]}
+            form(action='/findsimilarideas', method='post')
+              //input(id='content',type='hidden',value=tags[i] + " " + content[i], name='content')
+              input(id='tags',type='hidden',value=tags[i], name='tags')
+              input(id='content',type='hidden',value=content[i], name='content')              
+              button(type='submit', value='Search for this query',data-transition='fade', data-theme='c') Search for this query
+
+        

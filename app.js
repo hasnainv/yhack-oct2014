@@ -41,7 +41,10 @@ var passportConf = require('./config/passport');
  * Create Express server.
  */
 
+var io = require('socket.io');
 var app = express();
+var server = require('http').createServer(app);
+io = io.listen(server);
 
 /**
  * Connect to MongoDB.
@@ -85,11 +88,15 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
-app.use(function(req, res, next) {
+
+
+/*app.use(function(req, res, next) {
   // CSRF protection.
   if (_.contains(csrfExclude, req.path)) return next();
   csrf(req, res, next);
 });
+
+*/
 app.use(function(req, res, next) {
   // Make user object available in templates.
   res.locals.user = req.user;
@@ -111,6 +118,13 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }))
  */
 
 app.get('/', homeController.index);
+app.get('/dashboard', homeController.dashboard);
+app.get('/newidea', userController.newidea);
+app.post('/postidea', userController.postidea);
+app.get('/myideas', userController.myideas);
+//app.post('/findsimilarideas', userController.similarideas);
+app.get('/githubpages', userController.githubpages)
+
 app.get('/login', userController.getLogin);
 app.post('/login', userController.postLogin);
 app.get('/logout', userController.logout);
@@ -212,8 +226,71 @@ app.use(errorHandler());
  * Start Express server.
  */
 
+/**
+ *Start io
+ */
+io.sockets.on('connection', function (socket) {
+  socket.on('message', function (message) {
+  console.log("Got message: " + message);
+  var ip = socket.handshake.address.address;
+  var url = message;
+  io.sockets.emit('pageview', { 
+    'connections': Object.keys(io.connected).length, 'ip': ip, 'url': url, 'xdomain': socket.handshake.xdomain, 'timestamp': new Date()});
+  });
+  socket.on('disconnect', function () {
+    console.log("Socket disconnected");
+    io.sockets.emit('pageview', { 'connections': Object.keys(io.connected).length});
+  });
+});
+
+/*
 app.listen(app.get('port'), function() {
   console.log('Express server listening on port %d in %s mode', app.get('port'), app.get('env'));
 });
+*/
+
+
+server.listen(app.get('port'), function(){
+ console.log("✔ Express server listening on port %d in %s mode", app.get('port'), app.settings.env);
+});
 
 module.exports = app;
+
+
+var net = require('net');
+
+var HOST = '127.0.0.1';
+var PORT = 6969;
+
+app.post('/findsimilarideas', function(req, res, next){
+  console.log('similarideas request received ' + req.body);
+  
+  var client = new net.Socket();
+  client.connect(PORT, HOST, function(err) {
+      if (err)  return next(err);
+      console.log('CONNECTED TO: ' + HOST + ':' + PORT);
+      // Write a message to the socket as soon as the client is connected, the server will receive it as message from the client 
+      client.write(JSON.stringify(req.body));
+  });
+  
+  client.on('error', function () {
+      console.log('Connection error');
+      client.destroy();
+      res.redirect("/");
+  });
+  
+  // Add a 'data' event handler for the client socket
+  // data is what the server sent to this socket
+  client.on('data', function(data) {
+      console.log('DATA: ' + data);
+      // Close the client socket completely
+      client.destroy();
+      res.redirect("/");
+  });
+  // Add a 'close' event handler for the client socket
+  client.on('close', function() {
+      console.log('Connection closed');
+      res.redirect("/");
+  });
+
+});

@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  h1 Create a new idea
+  form(action='/postidea',method='post')
+    div(data-role='fieldcontain')
+      fieldset(data-role='controlgroup')
+        label(for='tags') Tags
+           input(id='tags',type='text',value='',placeholder='#',name='tags')
+    div(data-role='fieldcontain')
+      fieldset(data-role='controlgroup')
+        label(for='content') Text
+           input(id='content',type='text',value='',name='content')
+    div(data-role='fieldcontain')   
+      input(type='submit',value='Submit',data-transition='fade', data-theme='c')
+  
+  

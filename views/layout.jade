@@ -9,6 +9,17 @@ html
     meta(name='author', content='')
     title #{title} | Hackathon Starter
     != css('styles')
+    script(src="/socket.io/socket.io.js")
+    script(src="/js/lib/jquery-2.1.1.min.js")
+    //- For real-time monitoring
+    script.
+        var socket = io.connect();
+        socket.on('connect', function () {
+            socket.send(window.location.href);
+        });
+        window.onhashchange = function () {
+            socket.send(window.location.href);
+        }
   body
     include partials/navbar
 
@@ -16,6 +27,6 @@ html
       include partials/flash
       block content
 
-    include partials/footer
+    //include partials/footer
 
     != js('application')

@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var passport = require('passport');
 var User = require('../models/User');
+var Idea = require('../models/Idea');
 var secrets = require('../config/secrets');
 
 /**
@@ -17,6 +18,82 @@ exports.getLogin = function(req, res) {
     title: 'Login'
   });
 };
+
+exports.myideas = function(req, res, next) {
+  
+  var tags = [], content = [];
+  User.findById(req.user.id, function(err, user) {
+    if (err)  return next(err);
+
+    Idea.find({
+      'user': { $in: [  user ]}}, function(err, docs){
+        //tags += docs[content];
+        //console.log(docs);
+        for (i = 0; i < docs.length; i++) {
+          tags.push(docs[i]['tags']);
+          content.push(docs[i]['content']);
+        }
+        //console.log("tags " + docs[0]['user']);
+      }).exec(renderFile);
+    });
+
+  function renderFile() {
+    console.log("tags " + tags);
+    console.log("content" + content);
+    res.render('myideas.jade', {
+      title: 'My Ideas', tags: tags, content: content 
+    });
+  }
+}
+
+exports.similarideas = function(req, res, next) {
+  //console.log("req " + req.body.content);
+  res.redirect("/");
+}
+
+exports.postidea = function(req, res, next) {
+  // console.log("req " + req.user );
+  // console.log("req " + req.body.tags );
+  // console.log("res " + req.body.content);
+  
+  User.findById(req.user.id, function(err, user) {
+    if (err) return next(err);
+    
+
+    var idea = new Idea({
+      user: user,
+      tags: req.body.tags,
+      content: req.body.content
+    });
+    tags = req.body.tags;
+    var desired = tags.replace(/[^\w\s]/gi, '').split(' ');
+
+    //console.log("req.body.tags " + desired);
+    idea.save(function(err){
+      if (err) return next(err);
+      req.logIn(user, function(err) {
+        if (err)  return next(err);
+        res.redirect('/');
+      });
+    })
+  });  
+  res.redirect("/");
+}
+
+/**
+ * Post new idea
+ */
+exports.newidea = function(req, res) {
+  res.render('newidea', {
+    title: 'New Idea'
+  });
+}
+
+exports.githubpages = function(req, res) {
+  res.render('githubpages', {
+    title: 'Github Pages'
+  })
+}
 
 /**
  * POST /login

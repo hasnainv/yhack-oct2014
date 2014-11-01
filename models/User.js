@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
 
+
 var userSchema = new mongoose.Schema({
   email: { type: String, unique: true, lowercase: true },
   password: String,
@@ -75,4 +76,39 @@ userSchema.methods.gravatar = function(size) {
   return 'https://gravatar.com/avatar/' + md5 + '?s=' + size + '&d=retro';
 };
 
+/*
+var ideaSchema = new mongoose.Schema({
+  'tags': [String],
+  'content': String
+});
+
+
+
+/*
+var ideaSchema = new mongoose.Schema({
+  //'id': {type: String, index: true},
+  //'user': String,
+  //'user': {
+  //  type: mongoose.Schema.ObjectId,
+  //  ref: 'userSchema'
+  //},
+  'tags': [String],
+  'content': String
+});
+
+function extractKeywords(text) {
+  if (!text) return [];
+  return text.
+    split(/\s+/).
+    filter(function(v) { return v.length > 2; }).
+    filter(function(v, i, a) { return a.lastIndexOf(v) === i; });
+}
+
+ideaSchema.pre('save', function(next) {
+  this.keywords = extractKeywords(this.data);
+  next();
+});*/
+
+
 module.exports = mongoose.model('User', userSchema);
+
