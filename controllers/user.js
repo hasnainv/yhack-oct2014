@@ -6,6 +6,7 @@ var passport = require('passport');
 var User = require('../models/User');
 var Idea = require('../models/Idea');
 var secrets = require('../config/secrets');
+var Github = require('github-api');
 
 /**
  * GET /login
@@ -90,9 +91,28 @@ exports.newidea = function(req, res) {
 }
 
 exports.githubpages = function(req, res) {
-  res.render('githubpages', {
+  
+  var token = _.find(req.user.tokens, { kind: 'github' });
+  var github = new Github({ token: token.accessToken });
+
+  var user = github.getUser();
+  
+  console.log('user '  + user.toString() );
+  user.repos(function(err, repos) { console.log('repos ' + repos) });
+
+
+  var repo = github.getRepo('sahat', 'requirejs-library');
+  repo.show(function(err, repo) {
+    if (err) return next(err);
+    res.render('api/github', {
+      title: 'GitHub API',
+      repo: repo
+    });
+  });
+  //console.log('as ' + req.user.id);
+  /*res.render('githubpages', {
     title: 'Github Pages'
-  })
+  })*/
 }
 
 /**

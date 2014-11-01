@@ -260,20 +260,23 @@ module.exports = app;
 var net = require('net');
 
 var HOST = '127.0.0.1';
-var PORT = 6969;
+var clientPORT = 6969;
 
 app.post('/findsimilarideas', function(req, res, next){
   console.log('similarideas request received ' + req.body);
   
   var client = new net.Socket();
-  client.connect(PORT, HOST, function(err) {
+  client.connect(clientPORT, HOST, function(err) {
       if (err)  return next(err);
-      console.log('CONNECTED TO: ' + HOST + ':' + PORT);
+      console.log('CONNECTED TO: ' + HOST + ':' + clientPORT);
+      var uuid = guid();
+      req.body.uuid = uuid;
+
       // Write a message to the socket as soon as the client is connected, the server will receive it as message from the client 
       client.write(JSON.stringify(req.body));
   });
   
-  client.on('error', function () {
+  client.on('error', function() {
       console.log('Connection error');
       client.destroy();
       res.redirect("/");
@@ -282,15 +285,45 @@ app.post('/findsimilarideas', function(req, res, next){
   // Add a 'data' event handler for the client socket
   // data is what the server sent to this socket
   client.on('data', function(data) {
-      console.log('DATA: ' + data);
       // Close the client socket completely
+      console.log("Got signal to CLOSE!!!!!!!!!!!!!!" + data);
       client.destroy();
-      res.redirect("/");
+      res.redirect("/myideas");
   });
-  // Add a 'close' event handler for the client socket
-  client.on('close', function() {
-      console.log('Connection closed');
-      res.redirect("/");
-  });
+  
+  /*// Add a 'close' event handler for the client socket
+  client.on('close', function(data, err) {
 
+      console.log('Connection closed ' + data + " " + err);
+      res.redirect("/myideas");
+  });*/
 });
+
+var serverPort = 9696;
+net.createServer(function(sock) {
+      // We have a connection - a socket object is assigned to the connection automatically
+      console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
+      // Add a 'data' event handler to this instance of socket
+      sock.on('data', function(data) {
+          console.log('DATA ' + sock.remoteAddress + ': ' + data);
+          // Write the data back to the socket, the client will receive it as data from the server
+          sock.write('You said "' + data + '"');
+      });
+      // Add a 'close' event handler to this instance of socket
+      sock.on('close', function(data) {
+          console.log('CLOSED: ' + sock.remoteAddress +' '+ sock.remotePort);
+      });
+  }).listen(serverPort, HOST);
+  console.log('Server listening on ' + HOST +':'+ serverPort);
+
+var guid = (function() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+               .toString(16)
+               .substring(1);
+  }
+  return function() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+           s4() + '-' + s4() + s4() + s4();
+  };
+})();
