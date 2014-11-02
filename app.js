@@ -65,7 +65,7 @@ var csrfExclude = ['/url1', '/url2'];
  * Express configuration.
  */
 
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 4000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(compress());
@@ -269,8 +269,6 @@ app.post('/findsimilarideas', function(req, res, next){
   client.connect(clientPORT, HOST, function(err) {
       if (err)  return next(err);
       console.log('CONNECTED TO: ' + HOST + ':' + clientPORT);
-      var uuid = guid();
-      req.body.uuid = uuid;
 
       // Write a message to the socket as soon as the client is connected, the server will receive it as message from the client 
       client.write(JSON.stringify(req.body));
@@ -288,6 +286,15 @@ app.post('/findsimilarideas', function(req, res, next){
       // Close the client socket completely
       console.log("Got signal to CLOSE!!!!!!!!!!!!!!" + data);
       client.destroy();
+      data = JSON.parse(data);
+      
+      result1 = data["0"];
+      result2 = data["1"];
+      result3 = data["2"];
+      
+      //console.log("2:: " + x["1"]);
+      
+
       res.redirect("/myideas");
   });
   
@@ -315,15 +322,3 @@ net.createServer(function(sock) {
       });
   }).listen(serverPort, HOST);
   console.log('Server listening on ' + HOST +':'+ serverPort);
-
-var guid = (function() {
-  function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-               .toString(16)
-               .substring(1);
-  }
-  return function() {
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-           s4() + '-' + s4() + s4() + s4();
-  };
-})();
